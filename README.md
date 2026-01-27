@@ -31,6 +31,7 @@ The worker is expected to be spreaded in a SLURM cluster.
    ```
 3. Start the manager server:
    ```bash
+   cd ../manager
    cargo run --release --bin manager
    ```
 
