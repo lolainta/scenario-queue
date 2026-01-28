@@ -1,0 +1,4 @@
+.venv/
+logs/
+.env
+worker/**/*.py[cod]
