@@ -37,4 +37,13 @@ The worker is expected to be spreaded in a SLURM cluster.
 
 ### Worker
 
-To be implemented.
+1. Configure the manager URL in `worker/.env`.
+2. Pull the Apptainer image under the `worker` directory:
+   ```bash
+   cd worker
+   apptainer pull worker.sif docker://tonychi/worker:latest
+   ```
+3. Start the worker:
+   ```bash
+   sbatch scripts/run.slurm
+   ```
