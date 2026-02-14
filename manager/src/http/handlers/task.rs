@@ -1,10 +1,11 @@
 use axum::{Json, extract::State, http::StatusCode};
 
-use crate::{
-    app_state::AppState,
-    db,
-    http::dto::task::{ClaimTaskRequest, CompleteTaskRequest, CreateTaskRequest, TaskResponse},
+use crate::app_state::AppState;
+use crate::db;
+use crate::http::dto::task::{
+    ClaimTaskRequest, ClaimTaskResponse, CompleteTaskRequest, CreateTaskRequest, TaskResponse,
 };
+use crate::service;
 
 pub async fn list_tasks(
     State(state): State<AppState>,
@@ -20,7 +21,6 @@ pub async fn create_task(
     State(state): State<AppState>,
     Json(payload): Json<CreateTaskRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    // Validate foreign keys first
     if !db::plan::plan_exists(&state.db, payload.plan_id)
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
@@ -35,34 +35,44 @@ pub async fn create_task(
         return Err((StatusCode::BAD_REQUEST, "AV does not exist"));
     }
 
-    // Create task (unassigned)
-    let task = db::task::create(&state.db, payload.plan_id, payload.av_id)
+    if !db::sampler::sampler_exists(&state.db, payload.sampler_id)
         .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
+    {
+        return Err((StatusCode::BAD_REQUEST, "Sampler does not exist"));
+    }
+
+    if !db::simulator::simulator_exists(&state.db, payload.simulator_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
+    {
+        return Err((StatusCode::BAD_REQUEST, "Simulator does not exist"));
+    }
+
+    let task = db::task::create(
+        &state.db,
+        payload.plan_id,
+        payload.av_id,
+        payload.sampler_id,
+        payload.simulator_id,
+    )
+    .await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
 
     Ok(Json(TaskResponse::from(task)))
 }
 
 pub async fn claim_task(
     State(state): State<AppState>,
-    Json(payload): Json<ClaimTaskRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    // Validate worker exists
-    if !db::worker::worker_exists(&state.db, payload.worker_id)
+    Json(req): Json<ClaimTaskRequest>,
+) -> Result<Json<Option<ClaimTaskResponse>>, StatusCode> {
+    service::task::claim_task_for_worker(&state, req.worker_id)
         .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
-    {
-        return Err((StatusCode::BAD_REQUEST, "Worker does not exist"));
-    }
-
-    let task = db::task::claim_one_unassigned(&state.db, payload.worker_id)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
-
-    match task {
-        Some(t) => Ok(Json(TaskResponse::from(t))),
-        None => Err((StatusCode::NOT_FOUND, "No unassigned tasks available")),
-    }
+        .map(Json)
+        .map_err(|e| {
+            let (status, _msg): (StatusCode, &'static str) = e.into();
+            status
+        })
 }
 
 pub async fn complete_task(

@@ -11,10 +11,14 @@ pub async fn create(
     db: &DatabaseConnection,
     plan_id: i32,
     av_id: i32,
+    sampler_id: i32,
+    simulator_id: i32,
 ) -> Result<task::Model, DbErr> {
     let active = task::ActiveModel {
         plan_id: Set(plan_id),
         av_id: Set(av_id),
+        sampler_id: Set(sampler_id),
+        simulator_id: Set(simulator_id),
         status: Set(TaskStatus::Pending),
         ..Default::default()
     };
@@ -22,7 +26,7 @@ pub async fn create(
     active.insert(db).await
 }
 
-pub async fn claim_one_unassigned(
+pub async fn claim_task(
     db: &DatabaseConnection,
     worker_id: i32,
 ) -> Result<Option<task::Model>, DbErr> {
@@ -31,6 +35,7 @@ pub async fn claim_one_unassigned(
             Box::pin(async move {
                 let task = task::Entity::find()
                     .filter(task::Column::WorkerId.is_null())
+                    .filter(task::Column::Status.eq(TaskStatus::Pending))
                     .order_by_asc(task::Column::Id)
                     .one(txn)
                     .await?;

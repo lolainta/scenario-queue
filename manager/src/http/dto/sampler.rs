@@ -1,16 +1,16 @@
-use crate::entity::av;
+use crate::entity::sampler;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
-pub struct AvResponse {
+pub struct SamplerResponse {
     pub id: i32,
     pub name: String,
-    pub config_path: String,
+    pub config_path: Option<String>,
     pub module_path: String,
 }
 
-impl From<av::Model> for AvResponse {
-    fn from(m: av::Model) -> Self {
+impl From<sampler::Model> for SamplerResponse {
+    fn from(m: sampler::Model) -> Self {
         Self {
             id: m.id,
             name: m.name,
@@ -21,21 +21,21 @@ impl From<av::Model> for AvResponse {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreateAvRequest {
+pub struct CreateSamplerRequest {
     pub name: String,
-    pub config_path: String,
+    pub config_path: Option<String>,
     pub module_path: String,
 }
 
 #[derive(Debug, Serialize)]
-pub struct AvExecutionDto {
+pub struct SamplerExecutionDto {
     pub name: String,
-    pub config_path: String,
+    pub config_path: Option<String>,
     pub module_path: String,
 }
 
-impl From<av::Model> for AvExecutionDto {
-    fn from(m: av::Model) -> Self {
+impl From<sampler::Model> for SamplerExecutionDto {
+    fn from(m: sampler::Model) -> Self {
         Self {
             name: m.name,
             config_path: m.config_path,
