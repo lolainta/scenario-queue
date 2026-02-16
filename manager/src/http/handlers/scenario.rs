@@ -1,10 +1,8 @@
 use axum::{Json, extract::State, http::StatusCode};
 
-use crate::{
-    app_state::AppState,
-    db,
-    http::dto::scenario::{CreateScenarioRequest, ScenarioResponse},
-};
+use crate::app_state::AppState;
+use crate::db;
+use crate::http::dto::scenario::{CreateScenarioRequest, ScenarioResponse};
 
 pub async fn list_scenarios(
     State(state): State<AppState>,
@@ -22,9 +20,15 @@ pub async fn create_scenario(
     State(state): State<AppState>,
     Json(payload): Json<CreateScenarioRequest>,
 ) -> Result<Json<ScenarioResponse>, StatusCode> {
-    let scenario = db::scenario::create(&state.db, payload.title, payload.path)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let scenario = db::scenario::create(
+        &state.db,
+        payload.title,
+        payload.description,
+        payload.scenario_path,
+        payload.param_path,
+    )
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(ScenarioResponse::from(scenario)))
 }
