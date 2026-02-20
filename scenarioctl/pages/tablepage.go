@@ -21,11 +21,16 @@ const (
 	FieldTypeSelect FieldType = "select"
 )
 
+type SelectOption struct {
+	Label string
+	Value string
+}
+
 // FieldDef defines a form field
 type FieldDef struct {
 	Label   string
 	Type    FieldType
-	Options []string // For select fields, maps to []string{display, value}
+	Options []SelectOption
 }
 
 // CRUDCallbacks defines optional callbacks for CRUD operations
@@ -111,6 +116,9 @@ func (m *TablePage) StartFormWithDefs(fieldDefs []FieldDef, rowIndex int, onSubm
 			ti := textinput.New()
 			ti.CharLimit = 256
 			ti.Placeholder = def.Label
+			if len(def.Options) > 0 {
+				ti.SetValue(def.Options[0].Label)
+			}
 			fields = append(fields, ti)
 			labels = append(labels, def.Label)
 			selectIndex[fieldIndex] = 0 // Start at first option
@@ -187,6 +195,10 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				}
 				return m, nil
 			case "e":
+				if m.table.Cursor() < 0 {
+					m.err = "No row selected for editing"
+					return m, nil
+				}
 				if m.crud != nil && m.table.Cursor() < len(m.currentRows) {
 					m.table.Blur() // Blur table when entering form
 					m.crud.OnUpdate(m.table.Cursor())
@@ -194,7 +206,23 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 					if m.form != nil {
 						currentRow := m.currentRows[m.table.Cursor()]
 						for i := 1; i < len(currentRow) && (i-1) < len(m.form.fields); i++ {
-							m.form.fields[i-1].SetValue(currentRow[i])
+							fieldIdx := i - 1
+							if m.form.fieldDefs[fieldIdx].Type == FieldTypeSelect {
+								options := m.form.fieldDefs[fieldIdx].Options
+								selectedIndex := 0
+								for j := 0; j < len(options); j++ {
+									if options[j].Label == currentRow[i] || options[j].Value == currentRow[i] {
+										selectedIndex = j
+										break
+									}
+								}
+								m.form.selectIndex[fieldIdx] = selectedIndex
+								if selectedIndex < len(options) {
+									m.form.fields[fieldIdx].SetValue(options[selectedIndex].Label)
+								}
+							} else {
+								m.form.fields[fieldIdx].SetValue(currentRow[i])
+							}
 						}
 					}
 					// Return Blink command from first focused field
@@ -204,6 +232,10 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				}
 				return m, nil
 			case "d":
+				if m.table.Cursor() < 0 {
+					m.err = "No row selected for deletion"
+					return m, nil
+				}
 				if m.crud != nil && m.table.Cursor() < len(m.currentRows) {
 					cursor := m.table.Cursor()
 					if m.crud.OnDelete != nil {
@@ -242,11 +274,11 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				// Handle Up arrow for select fields
 				if m.form.focusIndex < len(m.form.fieldDefs) && m.form.fieldDefs[m.form.focusIndex].Type == FieldTypeSelect {
 					options := m.form.fieldDefs[m.form.focusIndex].Options
-					if len(options) > 1 {
+					if len(options) > 0 {
 						if idx, ok := m.form.selectIndex[m.form.focusIndex]; ok {
-							idx = (idx - 1 + len(options)/2) % (len(options) / 2)
+							idx = (idx - 1 + len(options)) % len(options)
 							m.form.selectIndex[m.form.focusIndex] = idx
-							m.form.fields[m.form.focusIndex].SetValue(options[idx*2]) // Set to display value
+							m.form.fields[m.form.focusIndex].SetValue(options[idx].Label)
 						}
 					}
 				}
@@ -255,11 +287,11 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				// Handle Down arrow for select fields
 				if m.form.focusIndex < len(m.form.fieldDefs) && m.form.fieldDefs[m.form.focusIndex].Type == FieldTypeSelect {
 					options := m.form.fieldDefs[m.form.focusIndex].Options
-					if len(options) > 1 {
+					if len(options) > 0 {
 						if idx, ok := m.form.selectIndex[m.form.focusIndex]; ok {
-							idx = (idx + 1) % (len(options) / 2)
+							idx = (idx + 1) % len(options)
 							m.form.selectIndex[m.form.focusIndex] = idx
-							m.form.fields[m.form.focusIndex].SetValue(options[idx*2]) // Set to display value
+							m.form.fields[m.form.focusIndex].SetValue(options[idx].Label)
 						}
 					}
 				}
@@ -267,11 +299,11 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 			case "enter", "return":
 				values := make([]string, len(m.form.fields))
 				for i, f := range m.form.fields {
-					// For select fields, use the value (second element) instead of display
+					// For select fields, use option value instead of display label
 					if i < len(m.form.fieldDefs) && m.form.fieldDefs[i].Type == FieldTypeSelect {
 						options := m.form.fieldDefs[i].Options
-						if idx, ok := m.form.selectIndex[i]; ok && idx*2+1 < len(options) {
-							values[i] = options[idx*2+1]
+						if idx, ok := m.form.selectIndex[i]; ok && idx < len(options) {
+							values[i] = options[idx].Value
 						}
 					} else {
 						values[i] = f.Value()
@@ -330,18 +362,17 @@ func (m *TablePage) View() string {
 					focusIndicator = "→ "
 				}
 				options := m.form.fieldDefs[i].Options
-				if len(options) > 1 {
+				if len(options) > 0 {
 					if idx, ok := m.form.selectIndex[i]; ok {
-						optionsPerRow := len(options) / 2
 						// Show current selection with up/down arrows
 						view += focusIndicator + "[↑↓] "
-						for j := 0; j < optionsPerRow; j++ {
+						for j := 0; j < len(options); j++ {
 							if j == idx {
-								view += "◉ " + options[j*2]
+								view += "◉ " + options[j].Label
 							} else {
-								view += "○ " + options[j*2]
+								view += "○ " + options[j].Label
 							}
-							if j < optionsPerRow-1 {
+							if j < len(options)-1 {
 								view += " | "
 							}
 						}

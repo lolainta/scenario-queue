@@ -47,7 +47,12 @@ func NewSimulatorPage(r *repo.Repo) app.Page {
 
 	tp.WithCRUD(&CRUDCallbacks{
 		OnCreate: func() error {
-			tp.StartForm(4, []string{"Name", "Image Path", "Config Path", "NV Runtime (true/false)"}, -1, func(values []string) error {
+			tp.StartFormWithDefs([]FieldDef{
+				{Label: "Name", Type: FieldTypeText},
+				{Label: "Image Path", Type: FieldTypeText},
+				{Label: "Config Path", Type: FieldTypeText},
+				{Label: "NV Runtime", Type: FieldTypeSelect, Options: []SelectOption{{Label: "false", Value: "false"}, {Label: "true", Value: "true"}}},
+			}, -1, func(values []string) error {
 				nvRuntime := values[3] == "true"
 				_, err := r.CreateSimulator(context.Background(), values[0], values[1], values[2], nvRuntime)
 				return err
@@ -62,7 +67,12 @@ func NewSimulatorPage(r *repo.Repo) app.Page {
 			var id int
 			fmt.Sscanf(row[0], "%d", &id)
 
-			tp.StartForm(4, []string{"Name", "Image Path", "Config Path", "NV Runtime (true/false)"}, id, func(values []string) error {
+			tp.StartFormWithDefs([]FieldDef{
+				{Label: "Name", Type: FieldTypeText},
+				{Label: "Image Path", Type: FieldTypeText},
+				{Label: "Config Path", Type: FieldTypeText},
+				{Label: "NV Runtime", Type: FieldTypeSelect, Options: []SelectOption{{Label: "false", Value: "false"}, {Label: "true", Value: "true"}}},
+			}, id, func(values []string) error {
 				nvRuntime := values[3] == "true"
 				return r.UpdateSimulator(context.Background(), id, values[0], values[1], values[2], nvRuntime)
 			})

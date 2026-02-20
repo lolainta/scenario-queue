@@ -71,24 +71,24 @@ func NewTaskPage(r *repo.Repo) app.Page {
 			}
 
 			// Build options for select fields
-			var planOptions []string
+			var planOptions []SelectOption
 			for _, p := range plans {
-				planOptions = append(planOptions, p.Name, strconv.Itoa(p.ID))
+				planOptions = append(planOptions, SelectOption{Label: p.Name, Value: strconv.Itoa(p.ID)})
 			}
 
-			var avOptions []string
+			var avOptions []SelectOption
 			for _, a := range avs {
-				avOptions = append(avOptions, a.Name, strconv.Itoa(a.ID))
+				avOptions = append(avOptions, SelectOption{Label: a.Name, Value: strconv.Itoa(a.ID)})
 			}
 
-			var simulatorOptions []string
+			var simulatorOptions []SelectOption
 			for _, s := range simulators {
-				simulatorOptions = append(simulatorOptions, s.Name, strconv.Itoa(s.ID))
+				simulatorOptions = append(simulatorOptions, SelectOption{Label: s.Name, Value: strconv.Itoa(s.ID)})
 			}
 
-			var samplerOptions []string
+			var samplerOptions []SelectOption
 			for _, s := range samplers {
-				samplerOptions = append(samplerOptions, s.Name, strconv.Itoa(s.ID))
+				samplerOptions = append(samplerOptions, SelectOption{Label: s.Name, Value: strconv.Itoa(s.ID)})
 			}
 
 			// Create form with only required fields (no status, no worker_id)
@@ -168,46 +168,46 @@ func NewTaskPage(r *repo.Repo) app.Page {
 			}
 
 			// Build options for select fields
-			var planOptions []string
+			var planOptions []SelectOption
 			var currentPlanIdx int
 			for i, p := range plans {
-				planOptions = append(planOptions, p.Name, strconv.Itoa(p.ID))
+				planOptions = append(planOptions, SelectOption{Label: p.Name, Value: strconv.Itoa(p.ID)})
 				if p.Name == currentTask.Plan {
 					currentPlanIdx = i
 				}
 			}
 
-			var avOptions []string
+			var avOptions []SelectOption
 			var currentAVIdx int
 			for i, a := range avs {
-				avOptions = append(avOptions, a.Name, strconv.Itoa(a.ID))
+				avOptions = append(avOptions, SelectOption{Label: a.Name, Value: strconv.Itoa(a.ID)})
 				if a.Name == currentTask.AV {
 					currentAVIdx = i
 				}
 			}
 
-			var simulatorOptions []string
+			var simulatorOptions []SelectOption
 			var currentSimulatorIdx int
 			for i, s := range simulators {
-				simulatorOptions = append(simulatorOptions, s.Name, strconv.Itoa(s.ID))
+				simulatorOptions = append(simulatorOptions, SelectOption{Label: s.Name, Value: strconv.Itoa(s.ID)})
 				if s.Name == currentTask.Simulator {
 					currentSimulatorIdx = i
 				}
 			}
 
-			var samplerOptions []string
+			var samplerOptions []SelectOption
 			var currentSamplerIdx int
 			for _, s := range samplers {
-				samplerOptions = append(samplerOptions, s.Name, strconv.Itoa(s.ID))
+				samplerOptions = append(samplerOptions, SelectOption{Label: s.Name, Value: strconv.Itoa(s.ID)})
 				// Note: samplers don't have a display name in TaskRow, so we skip current matching
 			}
 
 			// Status options and index
-			statusOptions := []string{
-				"Pending", "pending",
-				"In Progress", "in_progress",
-				"Completed", "completed",
-				"Failed", "failed",
+			statusOptions := []SelectOption{
+				{Label: "Pending", Value: "pending"},
+				{Label: "In Progress", Value: "in_progress"},
+				{Label: "Completed", Value: "completed"},
+				{Label: "Failed", Value: "failed"},
 			}
 			var currentStatusIdx int
 			statusValues := []string{"pending", "in_progress", "completed", "failed"}
@@ -259,19 +259,19 @@ func NewTaskPage(r *repo.Repo) app.Page {
 				tp.form.selectIndex[4] = currentStatusIdx
 
 				if len(tp.form.fields) > 0 {
-					tp.form.fields[0].SetValue(planOptions[currentPlanIdx*2])
+					tp.form.fields[0].SetValue(planOptions[currentPlanIdx].Label)
 				}
 				if len(tp.form.fields) > 1 {
-					tp.form.fields[1].SetValue(avOptions[currentAVIdx*2])
+					tp.form.fields[1].SetValue(avOptions[currentAVIdx].Label)
 				}
 				if len(tp.form.fields) > 2 {
-					tp.form.fields[2].SetValue(simulatorOptions[currentSimulatorIdx*2])
+					tp.form.fields[2].SetValue(simulatorOptions[currentSimulatorIdx].Label)
 				}
 				if len(tp.form.fields) > 3 {
-					tp.form.fields[3].SetValue(samplerOptions[currentSamplerIdx*2])
+					tp.form.fields[3].SetValue(samplerOptions[currentSamplerIdx].Label)
 				}
 				if len(tp.form.fields) > 4 {
-					tp.form.fields[4].SetValue(statusOptions[currentStatusIdx*2])
+					tp.form.fields[4].SetValue(statusOptions[currentStatusIdx].Label)
 				}
 				if len(tp.form.fields) > 5 {
 					tp.form.fields[5].SetValue(currentWorkerID)
