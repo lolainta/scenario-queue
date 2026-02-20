@@ -54,17 +54,17 @@ func NewPlanPage(r *repo.Repo) app.Page {
 			}
 
 			// Build options for select fields (display name + value ID)
-			var mapOptions []string
+			var mapOptions []SelectOption
 			for _, m := range maps {
-				mapOptions = append(mapOptions, m.Name, strconv.Itoa(m.ID))
+				mapOptions = append(mapOptions, SelectOption{Label: m.Name, Value: strconv.Itoa(m.ID)})
 			}
-			var scenarioOptions []string
+			var scenarioOptions []SelectOption
 			for _, s := range scenarios {
 				title := ""
 				if s.Title != nil {
 					title = *s.Title
 				}
-				scenarioOptions = append(scenarioOptions, title, strconv.Itoa(s.ID))
+				scenarioOptions = append(scenarioOptions, SelectOption{Label: title, Value: strconv.Itoa(s.ID)})
 			}
 
 			// Create form with text field for name and select fields for map/scenario
@@ -102,22 +102,22 @@ func NewPlanPage(r *repo.Repo) app.Page {
 			}
 
 			// Build options for select fields
-			var mapOptions []string
+			var mapOptions []SelectOption
 			currentMapIdx := 0
 			for i, m := range maps {
-				mapOptions = append(mapOptions, m.Name, strconv.Itoa(m.ID))
+				mapOptions = append(mapOptions, SelectOption{Label: m.Name, Value: strconv.Itoa(m.ID)})
 				if m.Name == row[2] {
 					currentMapIdx = i
 				}
 			}
-			var scenarioOptions []string
+			var scenarioOptions []SelectOption
 			currentScenarioIdx := 0
 			for i, s := range scenarios {
 				title := ""
 				if s.Title != nil {
 					title = *s.Title
 				}
-				scenarioOptions = append(scenarioOptions, title, strconv.Itoa(s.ID))
+				scenarioOptions = append(scenarioOptions, SelectOption{Label: title, Value: strconv.Itoa(s.ID)})
 				if title == row[3] {
 					currentScenarioIdx = i
 				}
@@ -142,10 +142,10 @@ func NewPlanPage(r *repo.Repo) app.Page {
 				tp.form.selectIndex[1] = currentMapIdx
 				tp.form.selectIndex[2] = currentScenarioIdx
 				if currentMapIdx < len(mapOptions) {
-					tp.form.fields[1].SetValue(mapOptions[currentMapIdx*2])
+					tp.form.fields[1].SetValue(mapOptions[currentMapIdx].Label)
 				}
 				if currentScenarioIdx < len(scenarioOptions) {
-					tp.form.fields[2].SetValue(scenarioOptions[currentScenarioIdx*2])
+					tp.form.fields[2].SetValue(scenarioOptions[currentScenarioIdx].Label)
 				}
 			}
 

@@ -19,6 +19,7 @@ func NewAVPage(r *repo.Repo) app.Page {
 			{Title: "Name", Width: 15},
 			{Title: "Image Path", Width: 25},
 			{Title: "Config Path", Width: 25},
+			{Title: "NV Runtime", Width: 12},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			rows, err := r.ListAV(ctx)
@@ -33,6 +34,7 @@ func NewAVPage(r *repo.Repo) app.Page {
 					av.Name,
 					av.ImagePath,
 					av.ConfigPath,
+					fmt.Sprint(av.NvRuntime),
 				})
 			}
 			return out, nil
@@ -41,8 +43,14 @@ func NewAVPage(r *repo.Repo) app.Page {
 
 	tp.WithCRUD(&CRUDCallbacks{
 		OnCreate: func() error {
-			tp.StartForm(3, []string{"Name", "Image Path", "Config Path"}, -1, func(values []string) error {
-				_, err := r.CreateAV(context.Background(), values[0], values[1], values[2], false)
+			tp.StartFormWithDefs([]FieldDef{
+				{Label: "Name", Type: FieldTypeText},
+				{Label: "Image Path", Type: FieldTypeText},
+				{Label: "Config Path", Type: FieldTypeText},
+				{Label: "NV Runtime", Type: FieldTypeSelect, Options: []SelectOption{{Label: "false", Value: "false"}, {Label: "true", Value: "true"}}},
+			}, -1, func(values []string) error {
+				nvRuntime := values[3] == "true"
+				_, err := r.CreateAV(context.Background(), values[0], values[1], values[2], nvRuntime)
 				return err
 			})
 			return nil
@@ -55,8 +63,14 @@ func NewAVPage(r *repo.Repo) app.Page {
 			var id int
 			fmt.Sscanf(row[0], "%d", &id)
 
-			tp.StartForm(3, []string{"Name", "Image Path", "Config Path"}, id, func(values []string) error {
-				return r.UpdateAV(context.Background(), id, values[0], values[1], values[2], false)
+			tp.StartFormWithDefs([]FieldDef{
+				{Label: "Name", Type: FieldTypeText},
+				{Label: "Image Path", Type: FieldTypeText},
+				{Label: "Config Path", Type: FieldTypeText},
+				{Label: "NV Runtime", Type: FieldTypeSelect, Options: []SelectOption{{Label: "false", Value: "false"}, {Label: "true", Value: "true"}}},
+			}, id, func(values []string) error {
+				nvRuntime := values[3] == "true"
+				return r.UpdateAV(context.Background(), id, values[0], values[1], values[2], nvRuntime)
 			})
 			return nil
 		},
