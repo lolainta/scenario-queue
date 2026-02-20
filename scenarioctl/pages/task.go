@@ -37,11 +37,11 @@ func NewTaskPage(r *repo.Repo) app.Page {
 				}
 				out = append(out, table.Row{
 					fmt.Sprint(task.ID),
-					task.Status,
+					workerID,
+					TaskStatusLabel(task.Status),
 					task.Plan,
 					task.AV,
 					task.Simulator,
-					workerID,
 				})
 			}
 			return out, nil
@@ -105,8 +105,8 @@ func NewTaskPage(r *repo.Repo) app.Page {
 				avID, _ := strconv.Atoi(values[1])
 				simulatorID, _ := strconv.Atoi(values[2])
 				samplerID, _ := strconv.Atoi(values[3])
-				status := "pending" // Default status
-				var workerID *int   // Defaults to null
+				status := string(TaskStatusPending) // Default status
+				var workerID *int                   // Defaults to null
 
 				_, err := r.CreateTask(context.Background(), planID, avID, simulatorID, samplerID, status, workerID)
 				return err
@@ -203,20 +203,8 @@ func NewTaskPage(r *repo.Repo) app.Page {
 			}
 
 			// Status options and index
-			statusOptions := []SelectOption{
-				{Label: "Pending", Value: "pending"},
-				{Label: "In Progress", Value: "in_progress"},
-				{Label: "Completed", Value: "completed"},
-				{Label: "Failed", Value: "failed"},
-			}
-			var currentStatusIdx int
-			statusValues := []string{"pending", "in_progress", "completed", "failed"}
-			for i, s := range statusValues {
-				if s == currentTask.Status {
-					currentStatusIdx = i
-					break
-				}
-			}
+			statusOptions := TaskStatusOptions()
+			currentStatusIdx := TaskStatusIndex(currentTask.Status)
 
 			// Worker ID field
 			currentWorkerID := ""
