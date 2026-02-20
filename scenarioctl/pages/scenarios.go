@@ -17,9 +17,8 @@ func NewScenarios(r *repo.Repo) app.Page {
 		[]table.Column{
 			{Title: "ID", Width: 6},
 			{Title: "Title", Width: 20},
-			{Title: "Description", Width: 30},
 			{Title: "Scenario Path", Width: 30},
-			{Title: "Param Path", Width: 30},
+			{Title: "Goal Config", Width: 30},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			scenarios, err := r.ListScenarios(ctx)
@@ -33,20 +32,19 @@ func NewScenarios(r *repo.Repo) app.Page {
 				if scenario.Title != nil && *scenario.Title != "" {
 					title = *scenario.Title
 				}
-				description := ""
-				if scenario.Description != nil && *scenario.Description != "" {
-					description = *scenario.Description
+				scenarioPath := scenario.ScenarioPath
+				if scenario.ScenarioPath != "" {
+					scenarioPath = scenario.ScenarioPath
 				}
-				paramPath := ""
-				if scenario.ParamPath != nil && *scenario.ParamPath != "" {
-					paramPath = *scenario.ParamPath
+				goalConfig := ""
+				if scenario.GoalConfig != nil && *scenario.GoalConfig != "" {
+					goalConfig = *scenario.GoalConfig
 				}
 				out = append(out, table.Row{
 					fmt.Sprint(scenario.ID),
 					title,
-					description,
-					scenario.ScenarioPath,
-					paramPath,
+					scenarioPath,
+					goalConfig,
 				})
 			}
 			return out, nil
@@ -55,20 +53,16 @@ func NewScenarios(r *repo.Repo) app.Page {
 
 	tp.WithCRUD(&CRUDCallbacks{
 		OnCreate: func() error {
-			tp.StartForm(4, []string{"Title", "Description", "Scenario Path", "Param Path"}, -1, func(values []string) error {
+			tp.StartForm(4, []string{"Title", "Scenario Path", "Goal Config"}, -1, func(values []string) error {
 				var title *string
 				if values[0] != "" {
 					title = &values[0]
 				}
-				var description *string
-				if values[1] != "" {
-					description = &values[1]
+				var goalConfig *string
+				if values[2] != "" {
+					goalConfig = &values[2]
 				}
-				var paramPath *string
-				if values[3] != "" {
-					paramPath = &values[3]
-				}
-				_, err := r.CreateScenario(context.Background(), title, description, values[2], paramPath)
+				_, err := r.CreateScenario(context.Background(), title, values[1], goalConfig)
 				return err
 			})
 			return nil
@@ -81,20 +75,16 @@ func NewScenarios(r *repo.Repo) app.Page {
 			var id int
 			fmt.Sscanf(row[0], "%d", &id)
 
-			tp.StartForm(4, []string{"Title", "Description", "Scenario Path", "Param Path"}, id, func(values []string) error {
+			tp.StartForm(4, []string{"Title", "Scenario Path", "Goal Config"}, id, func(values []string) error {
 				var title *string
 				if values[0] != "" {
 					title = &values[0]
 				}
-				var description *string
-				if values[1] != "" {
-					description = &values[1]
+				var goalConfig *string
+				if values[2] != "" {
+					goalConfig = &values[2]
 				}
-				var paramPath *string
-				if values[3] != "" {
-					paramPath = &values[3]
-				}
-				return r.UpdateScenario(context.Background(), id, title, description, values[2], paramPath)
+				return r.UpdateScenario(context.Background(), id, title, values[1], goalConfig)
 			})
 			return nil
 		},

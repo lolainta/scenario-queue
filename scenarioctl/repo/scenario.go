@@ -7,14 +7,13 @@ import (
 type Scenario struct {
 	ID           int
 	Title        *string
-	Description  *string
 	ScenarioPath string
-	ParamPath    *string
+	GoalConfig   *string
 }
 
 func (r *Repo) ListScenarios(ctx context.Context) ([]Scenario, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT id, title, description, scenario_path, param_path
+		SELECT id, title, scenario_path, goal_config
 		FROM scenario
 		ORDER BY id
 	`)
@@ -29,9 +28,8 @@ func (r *Repo) ListScenarios(ctx context.Context) ([]Scenario, error) {
 		err := rows.Scan(
 			&s.ID,
 			&s.Title,
-			&s.Description,
 			&s.ScenarioPath,
-			&s.ParamPath,
+			&s.GoalConfig,
 		)
 		if err != nil {
 			return nil, err
@@ -42,22 +40,22 @@ func (r *Repo) ListScenarios(ctx context.Context) ([]Scenario, error) {
 	return out, rows.Err()
 }
 
-func (r *Repo) CreateScenario(ctx context.Context, title *string, description *string, scenarioPath string, paramPath *string) (int, error) {
+func (r *Repo) CreateScenario(ctx context.Context, title *string, scenarioPath string, goalConfig *string) (int, error) {
 	var id int
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO scenario (title, description, scenario_path, param_path)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO scenario (title, scenario_path, goal_config)
+		VALUES ($1, $2, $3)
 		RETURNING id
-	`, title, description, scenarioPath, paramPath).Scan(&id)
+	`, title, scenarioPath, goalConfig).Scan(&id)
 	return id, err
 }
 
-func (r *Repo) UpdateScenario(ctx context.Context, id int, title *string, description *string, scenarioPath string, paramPath *string) error {
+func (r *Repo) UpdateScenario(ctx context.Context, id int, title *string, scenarioPath string, goalConfig *string) error {
 	_, err := r.db.Exec(ctx, `
 		UPDATE scenario
-		SET title = $1, description = $2, scenario_path = $3, param_path = $4
-		WHERE id = $5
-	`, title, description, scenarioPath, paramPath, id)
+		SET title = $1, scenario_path = $2, goal_config = $3
+		WHERE id = $4
+	`, title, scenarioPath, goalConfig, id)
 	return err
 }
 
