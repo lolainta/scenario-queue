@@ -17,11 +17,11 @@ func NewTaskPage(r *repo.Repo) app.Page {
 		"Tasks",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Worker ID", Width: 10},
+			{Title: "Worker ID", Width: 5},
 			{Title: "Status", Width: 12},
-			{Title: "Plan", Width: 15},
-			{Title: "AV", Width: 15},
-			{Title: "Simulator", Width: 15},
+			{Title: "Plan", Width: 50},
+			{Title: "AV", Width: 10},
+			{Title: "Simulator", Width: 10},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			tasks, err := r.ListTasks(ctx)

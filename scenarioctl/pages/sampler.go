@@ -16,8 +16,8 @@ func NewSamplerPage(r *repo.Repo) app.Page {
 		"Samplers",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Name", Width: 20},
-			{Title: "Module Path", Width: 30},
+			{Title: "Name", Width: 10},
+			{Title: "Module Path", Width: 60},
 			{Title: "Config Path", Width: 30},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
