@@ -429,7 +429,6 @@ func (m *TablePage) View() string {
 				view += m.form.fields[i].View() + "\n"
 			}
 		}
-		view += "\n[Tab] Next | [Shift+Tab] Prev | [Enter] Save | [Esc] Cancel"
 		if m.err != "" {
 			view += "\n\nError: " + m.err
 		}

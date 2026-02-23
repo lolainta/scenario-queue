@@ -1,0 +1,47 @@
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "scenarioctl/**"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "scenarioctl/**"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./scenarioctl
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "stable"
+        cache: true
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Build
+      run: go build ./...
+
+    - name: Run tests
+      run: go test ./... -v
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        working-directory: ./scenarioctl
