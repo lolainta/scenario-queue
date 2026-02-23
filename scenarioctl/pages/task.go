@@ -16,12 +16,13 @@ func NewTaskPage(r *repo.Repo) app.Page {
 	tp = NewTablePage(
 		"Tasks",
 		[]table.Column{
-			{Title: "ID", Width: 6},
-			{Title: "Worker ID", Width: 5},
+			{Title: "ID", Width: 8},
+			{Title: "Worker ID", Width: 10},
 			{Title: "Status", Width: 12},
 			{Title: "Plan", Width: 50},
 			{Title: "AV", Width: 10},
 			{Title: "Simulator", Width: 10},
+			{Title: "Sampler", Width: 10},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			tasks, err := r.ListTasks(ctx)
@@ -42,6 +43,7 @@ func NewTaskPage(r *repo.Repo) app.Page {
 					task.Plan,
 					task.AV,
 					task.Simulator,
+					task.Sampler,
 				})
 			}
 			return out, nil
@@ -197,9 +199,11 @@ func NewTaskPage(r *repo.Repo) app.Page {
 
 			var samplerOptions []SelectOption
 			var currentSamplerIdx int
-			for _, s := range samplers {
+			for i, s := range samplers {
 				samplerOptions = append(samplerOptions, SelectOption{Label: s.Name, Value: strconv.Itoa(s.ID)})
-				// Note: samplers don't have a display name in TaskRow, so we skip current matching
+				if s.Name == currentTask.Sampler {
+					currentSamplerIdx = i
+				}
 			}
 
 			// Status options and index
@@ -240,6 +244,7 @@ func NewTaskPage(r *repo.Repo) app.Page {
 
 			// Pre-populate form with current values
 			if tp.form != nil {
+				tp.DisableEditAutoPrefill()
 				tp.form.selectIndex[0] = currentPlanIdx
 				tp.form.selectIndex[1] = currentAVIdx
 				tp.form.selectIndex[2] = currentSimulatorIdx
