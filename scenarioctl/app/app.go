@@ -121,10 +121,10 @@ func (m App) View() string {
 	// Add help text based on stage
 	if m.page.IsInForm() {
 		// Stage 3: In form
-		pageView = pageView + "\n\n[Enter] Save | [Esc] Cancel"
+		pageView = pageView + "\n\n[Tab] Next | [Shift+Tab] Previous | [Enter] Save | [Esc] Cancel"
 	} else if !m.focusNav {
 		// Stage 2: Table view
-		pageView = pageView + "\n\n[↑↓] Navigate | [n] New | [e] Edit | [d] Delete | [Esc] Back to Tables"
+		pageView = pageView + "\n\n[↑↓] Navigate | [r] Refresh | [n] New | [e] Edit | [d] Delete | [Esc] Back to Tables"
 	}
 
 	body := bodyStyle.Render(m.page.Title() + "\n\n" + pageView)
