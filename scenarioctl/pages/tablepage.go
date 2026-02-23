@@ -2,6 +2,7 @@ package pages
 
 import (
 	"context"
+	"fmt"
 
 	"scenarioctl/app"
 
@@ -10,6 +11,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+func truncateWithEllipsis(s string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	if maxRunes <= 1 {
+		return "…"
+	}
+	return string(runes[:maxRunes-1]) + "…"
+}
 
 type Loader func(context.Context) ([]table.Row, error)
 
@@ -364,19 +379,36 @@ func (m *TablePage) View() string {
 				options := m.form.fieldDefs[i].Options
 				if len(options) > 0 {
 					if idx, ok := m.form.selectIndex[i]; ok {
-						// Show current selection with up/down arrows
-						view += focusIndicator + "[↑↓] "
+						if idx < 0 || idx >= len(options) {
+							idx = 0
+						}
+
+						// Expand options for short lines; compact only when too long.
+						renderedOptions := ""
 						for j := 0; j < len(options); j++ {
 							if j == idx {
-								view += "◉ " + options[j].Label
+								renderedOptions += "◉ " + options[j].Label
 							} else {
-								view += "○ " + options[j].Label
+								renderedOptions += "○ " + options[j].Label
 							}
 							if j < len(options)-1 {
-								view += " | "
+								renderedOptions += " | "
 							}
 						}
-						view += "\n"
+
+						const maxExpandedOptionRunes = 100
+						if len([]rune(renderedOptions)) > maxExpandedOptionRunes {
+							currentLabel := truncateWithEllipsis(options[idx].Label, 80)
+							view += fmt.Sprintf(
+								"%s[↑↓] (%d/%d) ◉ %s\n",
+								focusIndicator,
+								idx+1,
+								len(options),
+								currentLabel,
+							)
+						} else {
+							view += fmt.Sprintf("%s[↑↓] %s\n", focusIndicator, renderedOptions)
+						}
 					}
 				}
 			} else {
