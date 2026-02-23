@@ -17,9 +17,9 @@ func NewPlanPage(r *repo.Repo) app.Page {
 		"Plans",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Name", Width: 20},
-			{Title: "Map", Width: 20},
-			{Title: "Scenario", Width: 30},
+			{Title: "Name", Width: 40},
+			{Title: "Map", Width: 10},
+			{Title: "Scenario", Width: 40},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			rows, err := r.ListPlans(ctx)

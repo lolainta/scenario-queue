@@ -16,9 +16,9 @@ func NewScenarios(r *repo.Repo) app.Page {
 		"Scenarios",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Title", Width: 20},
-			{Title: "Scenario Path", Width: 30},
-			{Title: "Goal Config", Width: 30},
+			{Title: "Title", Width: 40},
+			{Title: "Scenario Path", Width: 20},
+			{Title: "Goal Config", Width: 20},
 		},
 		func(ctx context.Context) ([]table.Row, error) {
 			scenarios, err := r.ListScenarios(ctx)

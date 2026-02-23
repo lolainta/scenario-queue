@@ -16,9 +16,9 @@ func NewAVPage(r *repo.Repo) app.Page {
 		"AVs",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Name", Width: 15},
-			{Title: "Image Path", Width: 25},
-			{Title: "Config Path", Width: 25},
+			{Title: "Name", Width: 10},
+			{Title: "Image Path", Width: 30},
+			{Title: "Config Path", Width: 30},
 			{Title: "NV Runtime", Width: 12},
 		},
 		func(ctx context.Context) ([]table.Row, error) {

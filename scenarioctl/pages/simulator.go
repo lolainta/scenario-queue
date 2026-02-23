@@ -16,9 +16,9 @@ func NewSimulatorPage(r *repo.Repo) app.Page {
 		"Simulators",
 		[]table.Column{
 			{Title: "ID", Width: 6},
-			{Title: "Name", Width: 20},
-			{Title: "Image Path", Width: 25},
-			{Title: "Config Path", Width: 25},
+			{Title: "Name", Width: 10},
+			{Title: "Image Path", Width: 30},
+			{Title: "Config Path", Width: 40},
 			{Title: "NV Runtime", Width: 12},
 		},
 		func(ctx context.Context) ([]table.Row, error) {

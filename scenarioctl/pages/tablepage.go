@@ -2,6 +2,7 @@ package pages
 
 import (
 	"context"
+	"fmt"
 
 	"scenarioctl/app"
 
@@ -10,6 +11,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+func truncateWithEllipsis(s string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	if maxRunes <= 1 {
+		return "…"
+	}
+	return string(runes[:maxRunes-1]) + "…"
+}
 
 type Loader func(context.Context) ([]table.Row, error)
 
@@ -52,12 +67,13 @@ type TablePage struct {
 }
 
 type CRUDForm struct {
-	fields     []textinput.Model
-	fieldDefs  []FieldDef
-	labels     []string
-	focusIndex int
-	rowIndex   int
-	onSubmit   func(values []string) error
+	fields      []textinput.Model
+	fieldDefs   []FieldDef
+	labels      []string
+	focusIndex  int
+	rowIndex    int
+	onSubmit    func(values []string) error
+	autoPrefill bool
 	// For select fields
 	selectIndex map[int]int // field index -> selected option index
 }
@@ -137,9 +153,17 @@ func (m *TablePage) StartFormWithDefs(fieldDefs []FieldDef, rowIndex int, onSubm
 		focusIndex:  0,
 		rowIndex:    rowIndex,
 		onSubmit:    onSubmit,
+		autoPrefill: true,
 		selectIndex: selectIndex,
 	}
 	m.mode = "edit"
+}
+
+func (m *TablePage) DisableEditAutoPrefill() {
+	if m.form == nil {
+		return
+	}
+	m.form.autoPrefill = false
 }
 
 func (m *TablePage) Init() tea.Cmd {
@@ -202,26 +226,30 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				if m.crud != nil && m.table.Cursor() < len(m.currentRows) {
 					m.table.Blur() // Blur table when entering form
 					m.crud.OnUpdate(m.table.Cursor())
-					// Pre-populate form fields with current row values (skip ID column at index 0)
-					if m.form != nil {
+					// Pre-populate form fields with current row values only when table row columns
+					// align with form fields (ID column is skipped).
+					// If they don't align, page-specific OnUpdate prefill should take precedence.
+					if m.form != nil && m.form.autoPrefill {
 						currentRow := m.currentRows[m.table.Cursor()]
-						for i := 1; i < len(currentRow) && (i-1) < len(m.form.fields); i++ {
-							fieldIdx := i - 1
-							if m.form.fieldDefs[fieldIdx].Type == FieldTypeSelect {
-								options := m.form.fieldDefs[fieldIdx].Options
-								selectedIndex := 0
-								for j := 0; j < len(options); j++ {
-									if options[j].Label == currentRow[i] || options[j].Value == currentRow[i] {
-										selectedIndex = j
-										break
+						if len(currentRow)-1 == len(m.form.fields) {
+							for i := 1; i < len(currentRow) && (i-1) < len(m.form.fields); i++ {
+								fieldIdx := i - 1
+								if m.form.fieldDefs[fieldIdx].Type == FieldTypeSelect {
+									options := m.form.fieldDefs[fieldIdx].Options
+									selectedIndex := 0
+									for j := 0; j < len(options); j++ {
+										if options[j].Label == currentRow[i] || options[j].Value == currentRow[i] {
+											selectedIndex = j
+											break
+										}
 									}
+									m.form.selectIndex[fieldIdx] = selectedIndex
+									if selectedIndex < len(options) {
+										m.form.fields[fieldIdx].SetValue(options[selectedIndex].Label)
+									}
+								} else {
+									m.form.fields[fieldIdx].SetValue(currentRow[i])
 								}
-								m.form.selectIndex[fieldIdx] = selectedIndex
-								if selectedIndex < len(options) {
-									m.form.fields[fieldIdx].SetValue(options[selectedIndex].Label)
-								}
-							} else {
-								m.form.fields[fieldIdx].SetValue(currentRow[i])
 							}
 						}
 					}
@@ -364,19 +392,36 @@ func (m *TablePage) View() string {
 				options := m.form.fieldDefs[i].Options
 				if len(options) > 0 {
 					if idx, ok := m.form.selectIndex[i]; ok {
-						// Show current selection with up/down arrows
-						view += focusIndicator + "[↑↓] "
+						if idx < 0 || idx >= len(options) {
+							idx = 0
+						}
+
+						// Expand options for short lines; compact only when too long.
+						renderedOptions := ""
 						for j := 0; j < len(options); j++ {
 							if j == idx {
-								view += "◉ " + options[j].Label
+								renderedOptions += "◉ " + options[j].Label
 							} else {
-								view += "○ " + options[j].Label
+								renderedOptions += "○ " + options[j].Label
 							}
 							if j < len(options)-1 {
-								view += " | "
+								renderedOptions += " | "
 							}
 						}
-						view += "\n"
+
+						const maxExpandedOptionRunes = 100
+						if len([]rune(renderedOptions)) > maxExpandedOptionRunes {
+							currentLabel := truncateWithEllipsis(options[idx].Label, 80)
+							view += fmt.Sprintf(
+								"%s[↑↓] (%d/%d) ◉ %s\n",
+								focusIndicator,
+								idx+1,
+								len(options),
+								currentLabel,
+							)
+						} else {
+							view += fmt.Sprintf("%s[↑↓] %s\n", focusIndicator, renderedOptions)
+						}
 					}
 				}
 			} else {
