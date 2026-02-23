@@ -8,16 +8,18 @@ type TaskRow struct {
 	Plan      string
 	AV        string
 	Simulator string
+	Sampler   string
 	WorkerID  *int
 }
 
 func (r *Repo) ListTasks(ctx context.Context) ([]TaskRow, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT t.id, t.status, p.name, a.name, s.name, t.worker_id
+		SELECT t.id, t.status, p.name, a.name, s.name, sp.name, t.worker_id
 		FROM task t
 		JOIN plan p ON t.plan_id = p.id
 		JOIN av a ON t.av_id = a.id
 		JOIN simulator s ON t.simulator_id = s.id
+		JOIN sampler sp ON t.sampler_id = sp.id
 		ORDER BY t.id DESC
 	`)
 	if err != nil {
@@ -28,7 +30,7 @@ func (r *Repo) ListTasks(ctx context.Context) ([]TaskRow, error) {
 	var out []TaskRow
 	for rows.Next() {
 		var x TaskRow
-		rows.Scan(&x.ID, &x.Status, &x.Plan, &x.AV, &x.Simulator, &x.WorkerID)
+		rows.Scan(&x.ID, &x.Status, &x.Plan, &x.AV, &x.Simulator, &x.Sampler, &x.WorkerID)
 		out = append(out, x)
 	}
 	return out, rows.Err()
