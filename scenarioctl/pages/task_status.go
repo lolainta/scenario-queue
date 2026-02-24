@@ -7,6 +7,7 @@ const (
 	TaskStatusInProgress TaskStatus = "in_progress"
 	TaskStatusCompleted  TaskStatus = "completed"
 	TaskStatusFailed     TaskStatus = "failed"
+	TaskStatusInvalid    TaskStatus = "invalid"
 )
 
 var allTaskStatuses = []TaskStatus{
@@ -14,6 +15,7 @@ var allTaskStatuses = []TaskStatus{
 	TaskStatusInProgress,
 	TaskStatusCompleted,
 	TaskStatusFailed,
+	TaskStatusInvalid,
 }
 
 func (s TaskStatus) Label() string {
@@ -26,6 +28,8 @@ func (s TaskStatus) Label() string {
 		return "Completed"
 	case TaskStatusFailed:
 		return "Failed"
+	case TaskStatusInvalid:
+		return "Invalid"
 	default:
 		return string(s)
 	}
