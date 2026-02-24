@@ -19,7 +19,9 @@ func (r *Repo) ListMaps(ctx context.Context) ([]MapRow, error) {
 	var out []MapRow
 	for rows.Next() {
 		var x MapRow
-		rows.Scan(&x.ID, &x.Name, &x.XodrPath, &x.OsmPath)
+		if err := rows.Scan(&x.ID, &x.Name, &x.XodrPath, &x.OsmPath); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

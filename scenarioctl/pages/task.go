@@ -12,8 +12,7 @@ import (
 )
 
 func NewTaskPage(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Tasks",
 		[]table.Column{
 			{Title: "ID", Width: 8},
@@ -121,7 +120,10 @@ func NewTaskPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeleteTask(context.Background(), id)
 		},
 		OnUpdate: func(rowIndex int) error {
@@ -130,8 +132,10 @@ func NewTaskPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
-
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			ctx := context.Background()
 
 			// Fetch all tasks to get current values

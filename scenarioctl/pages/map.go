@@ -11,8 +11,7 @@ import (
 )
 
 func NewMapPage(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Maps",
 		[]table.Column{
 			{Title: "ID", Width: 6},
@@ -69,8 +68,10 @@ func NewMapPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
-
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			tp.StartForm(3, []string{"Name", "XODR Path", "OSM Path"}, id, func(values []string) error {
 				var xodrPath *string
 				if values[1] != "" {
@@ -90,7 +91,10 @@ func NewMapPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeleteMap(context.Background(), id)
 		},
 	})

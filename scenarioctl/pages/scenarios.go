@@ -11,8 +11,7 @@ import (
 )
 
 func NewScenarios(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Scenarios",
 		[]table.Column{
 			{Title: "ID", Width: 6},
@@ -73,8 +72,10 @@ func NewScenarios(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
-
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			tp.StartForm(4, []string{"Title", "Scenario Path", "Goal Config"}, id, func(values []string) error {
 				var title *string
 				if values[0] != "" {
@@ -94,7 +95,10 @@ func NewScenarios(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeleteScenario(context.Background(), id)
 		},
 	})

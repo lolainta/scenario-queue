@@ -11,8 +11,7 @@ import (
 )
 
 func NewSimulatorPage(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Simulators",
 		[]table.Column{
 			{Title: "ID", Width: 6},
@@ -65,8 +64,10 @@ func NewSimulatorPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
-
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			tp.StartFormWithDefs([]FieldDef{
 				{Label: "Name", Type: FieldTypeText},
 				{Label: "Image Path", Type: FieldTypeText},
@@ -84,7 +85,10 @@ func NewSimulatorPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeleteSimulator(context.Background(), id)
 		},
 	})

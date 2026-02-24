@@ -14,7 +14,10 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("No .env file found, relying on environment variables")
+	}
 
 	pool := db.Connect()
 	defer pool.Close()

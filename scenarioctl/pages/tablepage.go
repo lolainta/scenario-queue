@@ -121,13 +121,14 @@ func (m *TablePage) StartFormWithDefs(fieldDefs []FieldDef, rowIndex int, onSubm
 	fieldIndex := 0
 
 	for _, def := range fieldDefs {
-		if def.Type == FieldTypeText {
+		switch def.Type {
+		case FieldTypeText:
 			ti := textinput.New()
 			ti.CharLimit = 256
 			ti.Placeholder = def.Label
 			fields = append(fields, ti)
 			labels = append(labels, def.Label)
-		} else if def.Type == FieldTypeSelect {
+		case FieldTypeSelect:
 			// For select fields, we still need a textinput placeholder
 			ti := textinput.New()
 			ti.CharLimit = 256
@@ -210,7 +211,12 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 					m.mode = "create"
 					m.table.Blur() // Blur table when entering form
 					if m.crud.OnCreate != nil {
-						m.crud.OnCreate()
+						if err := m.crud.OnCreate(); err != nil {
+							m.err = err.Error()
+							m.mode = "view"
+							m.table.Focus() // Re-focus table if form won't be shown
+							return m, nil
+						}
 					}
 					// Return Blink command from first focused field
 					if m.form != nil && len(m.form.fields) > 0 {
@@ -225,7 +231,14 @@ func (m *TablePage) Update(msg tea.Msg) (app.Page, tea.Cmd) {
 				}
 				if m.crud != nil && m.table.Cursor() < len(m.currentRows) {
 					m.table.Blur() // Blur table when entering form
-					m.crud.OnUpdate(m.table.Cursor())
+					if m.crud.OnUpdate != nil {
+						if err := m.crud.OnUpdate(m.table.Cursor()); err != nil {
+							m.err = err.Error()
+							m.mode = "view"
+							m.table.Focus() // Re-focus table if form won't be shown
+							return m, nil
+						}
+					}
 					// Pre-populate form fields with current row values only when table row columns
 					// align with form fields (ID column is skipped).
 					// If they don't align, page-specific OnUpdate prefill should take precedence.

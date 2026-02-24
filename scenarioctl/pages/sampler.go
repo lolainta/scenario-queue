@@ -11,8 +11,7 @@ import (
 )
 
 func NewSamplerPage(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Samplers",
 		[]table.Column{
 			{Title: "ID", Width: 6},
@@ -61,7 +60,10 @@ func NewSamplerPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 
 			tp.StartForm(3, []string{"Name", "Module Path", "Config Path"}, id, func(values []string) error {
 				var configPath *string
@@ -78,7 +80,10 @@ func NewSamplerPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeleteSampler(context.Background(), id)
 		},
 	})

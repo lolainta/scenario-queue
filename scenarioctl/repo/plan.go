@@ -24,7 +24,9 @@ func (r *Repo) ListPlans(ctx context.Context) ([]PlanRow, error) {
 	var out []PlanRow
 	for rows.Next() {
 		var x PlanRow
-		rows.Scan(&x.ID, &x.Name, &x.Map, &x.Scenario)
+		if err := rows.Scan(&x.ID, &x.Name, &x.Map, &x.Scenario); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

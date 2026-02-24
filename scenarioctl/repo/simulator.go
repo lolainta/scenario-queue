@@ -20,7 +20,9 @@ func (r *Repo) ListSimulators(ctx context.Context) ([]SimulatorRow, error) {
 	var out []SimulatorRow
 	for rows.Next() {
 		var x SimulatorRow
-		rows.Scan(&x.ID, &x.Name, &x.ImagePath, &x.ConfigPath, &x.NvRuntime)
+		if err := rows.Scan(&x.ID, &x.Name, &x.ImagePath, &x.ConfigPath, &x.NvRuntime); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

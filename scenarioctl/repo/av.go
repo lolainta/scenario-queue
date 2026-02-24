@@ -20,7 +20,9 @@ func (r *Repo) ListAV(ctx context.Context) ([]AVRow, error) {
 	var out []AVRow
 	for rows.Next() {
 		var x AVRow
-		rows.Scan(&x.ID, &x.Name, &x.ImagePath, &x.ConfigPath, &x.NvRuntime)
+		if err := rows.Scan(&x.ID, &x.Name, &x.ImagePath, &x.ConfigPath, &x.NvRuntime); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

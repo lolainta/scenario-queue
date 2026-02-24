@@ -19,7 +19,9 @@ func (r *Repo) ListSamplers(ctx context.Context) ([]SamplerRow, error) {
 	var out []SamplerRow
 	for rows.Next() {
 		var x SamplerRow
-		rows.Scan(&x.ID, &x.Name, &x.ModulePath, &x.ConfigPath)
+		if err := rows.Scan(&x.ID, &x.Name, &x.ModulePath, &x.ConfigPath); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

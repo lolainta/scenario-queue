@@ -30,7 +30,9 @@ func (r *Repo) ListTasks(ctx context.Context) ([]TaskRow, error) {
 	var out []TaskRow
 	for rows.Next() {
 		var x TaskRow
-		rows.Scan(&x.ID, &x.Status, &x.Plan, &x.AV, &x.Simulator, &x.Sampler, &x.WorkerID)
+		if err := rows.Scan(&x.ID, &x.Status, &x.Plan, &x.AV, &x.Simulator, &x.Sampler, &x.WorkerID); err != nil {
+			return nil, err
+		}
 		out = append(out, x)
 	}
 	return out, rows.Err()

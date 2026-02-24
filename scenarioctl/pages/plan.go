@@ -12,8 +12,7 @@ import (
 )
 
 func NewPlanPage(r *repo.Repo) app.Page {
-	var tp *TablePage
-	tp = NewTablePage(
+	var tp = NewTablePage(
 		"Plans",
 		[]table.Column{
 			{Title: "ID", Width: 6},
@@ -88,8 +87,10 @@ func NewPlanPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
-
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			// Fetch available maps and scenarios for selection
 			ctx := context.Background()
 			maps, err := r.ListMaps(ctx)
@@ -157,7 +158,10 @@ func NewPlanPage(r *repo.Repo) app.Page {
 			}
 			row := tp.currentRows[rowIndex]
 			var id int
-			fmt.Sscanf(row[0], "%d", &id)
+			_, err := fmt.Sscanf(row[0], "%d", &id)
+			if err != nil {
+				return fmt.Errorf("failed to parse ID: %w", err)
+			}
 			return r.DeletePlan(context.Background(), id)
 		},
 	})
